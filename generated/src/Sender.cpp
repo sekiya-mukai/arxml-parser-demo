@@ -1,3 +1,45 @@
+/*
+    Senderアプリケーション生成用テンプレート
+
+    本ファイルはJinja2テンプレートとして管理されており、
+    Python製コードジェネレータによって
+    実際のC++ソースコードが生成される。
+
+    可変パラメータ
+
+    Sender
+        → クラス名・ファイル名
+
+    50001
+        → 送信先ポート番号
+
+    192.168.10.101
+        → 送信先IPアドレス
+
+    100
+        → 送信周期(ms)
+
+    例)
+
+    sender.app_name      = Sender
+    receiver.port        = 50001
+    receiver.ip_address  = 192.168.10.101
+    signal.cycle_ms      = 100
+
+    ↓生成後
+
+    void Sender::run()
+    {
+        ...
+    }
+
+    のようなコードが出力される。
+
+    通信設定変更時でも、
+    ARXMLや設定ファイルを変更するだけで
+    ソースコードを再生成可能な構成としている。
+*/
+
 #include "Sender.hpp"
 
 #include <arpa/inet.h>
@@ -10,28 +52,72 @@
 
 void Sender::run()
 {
+    /*
+        UDP通信用ソケット生成
+
+        AF_INET    : IPv4通信
+        SOCK_DGRAM : UDP通信
+    */
     int sock =
         socket(
             AF_INET,
             SOCK_DGRAM,
             0);
 
+    // 送信先情報保持用構造体
     sockaddr_in receiverAddr {};
 
+    // IPv4利用
     receiverAddr.sin_family = AF_INET;
 
+    /*
+        送信先ポート番号
+
+        コード生成時に設定値が埋め込まれる。
+
+        例)
+        50001
+        50002
+        60000
+    */
     receiverAddr.sin_port =
         htons(
             50001
         );
 
+    /*
+        送信先IPアドレス設定
+
+        通信先ECUやアプリのIPアドレスを
+        テンプレート変数から取得する。
+
+        例)
+        192.168.10.101
+        192.168.10.102
+    */
     inet_pton(
         AF_INET,
         "192.168.10.101",
         &receiverAddr.sin_addr);
 
+    /*
+        周期送信ループ
+
+        車載システムでは
+        センサ値や状態情報を一定周期で送信するため、
+        本サンプルでも周期送信方式を採用している。
+    */
     while(true)
     {
+        /*
+            UDPパケット送信
+
+            counter_を1Byteデータとして送信。
+
+            実際の車載通信では
+            Alive Counterや状態値を送信する用途を
+            想定している。
+        */
         sendto(
             sock,
             &counter_,
@@ -41,11 +127,21 @@ void Sender::run()
                 &receiverAddr),
             sizeof(receiverAddr));
 
+        // 送信データをログ出力
         std::cout
             << "[TX] "
             << static_cast<int>(counter_)
             << std::endl;
 
+        /*
+            0～255の循環カウンタ
+
+            車載ソフトウェアでは
+            Alive Counterとして利用されることが多い。
+
+            Receiver側では
+            欠番や通信断検出に利用できる。
+        */
         if(counter_ == 255)
         {
             counter_ = 0;
@@ -55,6 +151,18 @@ void Sender::run()
             ++counter_;
         }
 
+        /*
+            指定周期待機
+
+            テンプレート変数から
+            通信周期を設定可能。
+
+            例)
+            10ms
+            20ms
+            100ms
+            1000ms
+        */
         std::this_thread::sleep_for(
             std::chrono::milliseconds(
                 100

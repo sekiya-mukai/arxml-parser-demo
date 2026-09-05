@@ -1,54 +1,179 @@
+#
+# コードジェネレータ向け設定ファイル
+#
+# 本ファイルはARXML生成およびC++ソースコード生成の
+# 入力情報として利用する。
+#
+# Python製コードジェネレータが本ファイルを読み込み、
+#
+# ・ARXML生成
+# ・Senderアプリ生成
+# ・Receiverアプリ生成
+# ・CMakeLists.txt生成
+#
+# を実施する。
+#
+
 application:
+
+  # プロジェクト名
+  #
+  # CMakeLists.txtのproject名として利用
+  #
   name: CommunicationDemo
 
 communication:
+
+  # 通信方式
+  #
+  # 現在はUDPを指定
+  # 将来的にはTCPやSOME/IPへの拡張も可能
+  #
   protocol: UDP
 
 sender:
+
+  # 送信アプリケーション名
+  #
+  # Sender.cpp
+  # Sender.hpp
+  #
+  # の生成に利用
+  #
   app_name: Sender
 
+  # Sender側IPアドレス
+  #
+  # 自アプリケーション識別用
+  #
   ip_address: "192.168.10.100"
 
+  # Sender側MACアドレス
+  #
+  # 現状サンプルでは未使用
+  # 将来的な通信設定拡張を想定
+  #
   mac_address: "00:11:22:33:44:55"
 
+  # Sender待受ポート
+  #
+  # 双方向通信対応時などに利用可能
+  #
   port: 50000
 
 receiver:
+
+  # 受信アプリケーション名
+  #
+  # Receiver.cpp
+  # Receiver.hpp
+  #
+  # の生成に利用
+  #
   app_name: Receiver
 
+  # Receiver側IPアドレス
+  #
+  # Senderが送信先として利用
+  #
   ip_address: "192.168.10.101"
 
+  # Receiver側MACアドレス
+  #
+  # 現状サンプルでは未使用
+  #
   mac_address: "AA:BB:CC:DD:EE:FF"
 
+  # Receiver待受ポート番号
+  #
+  # Senderから送信されるデータの受信ポート
+  #
   port: 50001
 
 signal:
+
+  # 送受信対象シグナル名
+  #
+  # ARXMLや生成コードで利用
+  #
   name: CounterSignal
 
+  # データ型
+  #
+  # uint8
+  # uint16
+  # uint32
+  # float
+  #
+  # などを想定
+  #
   data_type: uint8
 
+  # データサイズ(Byte)
+  #
+  # uint8 → 1byte
+  #
   data_size_byte: 1
 
+  # 送信周期(ms)
+  #
+  # Sender周期タスクとして利用
+  #
   cycle_ms: 100
 
+  # 初期値
+  #
+  # 通信開始時の初期データ
+  #
   initial_value: 0
 
 arxml:
+
+  # AUTOSAR Interface名
+  #
+  # ARXML生成時に利用
+  #
   interface_name: CounterInterface
 
+  # AUTOSAR Package名
+  #
+  # ARXML生成時に利用
+  #
   package_name: CommunicationPackage
 
-
+#
+# シグナル一覧
+#
+# 実際のAUTOSARでは
+# 複数シグナルを定義可能
+#
+# 将来的な拡張を想定した定義
+#
 signals:
 
+  #
+  # カウンタ値
+  #
+  # Alive Counterを想定
+  #
   - name: CounterSignal
     type: uint8
     size: 1
 
+  #
+  # 車速情報
+  #
+  # Vehicle Speed Signal
+  #
   - name: VehicleSpeed
     type: uint16
     size: 2
 
+  #
+  # ステアリング角
+  #
+  # 単位はdegなどを想定
+  #
   - name: SteeringAngle
     type: float
     size: 4

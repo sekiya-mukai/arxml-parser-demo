@@ -1,19 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+    ARXML生成用Jinja2テンプレート
+
+    本テンプレートはPythonから利用され、
+    設定情報(JSON/YAML/設定ファイル等)を基に
+    AUTOSAR形式のARXMLファイルを自動生成する。
+
+
+    例)
+    package_name   : CommunicationPackage
+    interface_name : CounterInterface
+
+    ↓生成後
+
+    <SHORT-NAME>CommunicationPackage</SHORT-NAME>
+    <SHORT-NAME>CounterInterface</SHORT-NAME>
+
+    のようなARXMLが出力される。
+-->
+
 <AUTOSAR>
 
+    <!-- AUTOSAR設定のルート要素 -->
     <AR-PACKAGES>
 
+        <!-- ARXML内のパッケージ定義 -->
         <AR-PACKAGE>
 
+            <!--
+                パッケージ名
+
+                Pythonから渡された値で置換される。
+                通信定義やアプリケーション定義を
+                格納する単位として利用する。
+            -->
             <SHORT-NAME>
                 CommunicationPackage
             </SHORT-NAME>
 
+            <!-- パッケージ内に含まれる要素群 -->
             <ELEMENTS>
 
+                <!--
+                    Sender-Receiver Interface
+
+                    AUTOSARにおける
+                    データ送受信用インターフェース。
+
+                    実際のプロジェクトでは
+                    CAN通信、
+                    SOME/IP通信、
+                    アプリケーション間通信などで
+                    使用されることが多い。
+                -->
                 <SENDER-RECEIVER-INTERFACE>
 
+                    <!--
+                        インターフェース名
+
+                        Pythonから渡された値で置換される。
+
+                        例:
+                        CounterInterface
+                        VehicleSpeedInterface
+                        TemperatureInterface
+                    -->
                     <SHORT-NAME>
                         CounterInterface
                     </SHORT-NAME>
