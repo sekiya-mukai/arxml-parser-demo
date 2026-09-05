@@ -1,12 +1,14 @@
 # Autosar Communication Generator
 
-AUTOSAR Adaptive Platform 開発で得た知見を活かし、**YAML設定ファイルから ARXML と C++送受信アプリケーションを自動生成するコードジェネレータ**を開発しました。
+AUTOSAR Adaptive Platform 開発で得た知見を活かし、**YAML設定ファイルからARXMLおよびC++送受信アプリケーションを自動生成するコードジェネレータ**を作成しました。
 
-生成されたアプリケーションは UDP 通信による疎通確認を目的としており、送信側は 1Byte カウンタを周期送信します。
+設定ファイルを変更するだけで、通信設定に応じたARXMLや送受信アプリケーションを生成できます。
+
+生成されたアプリケーションはUDP通信による疎通確認を目的としており、送信側は1Byteカウンタを周期送信します。
 
 ---
 
-## Counter Behavior
+## カウンタ動作
 
 ```text
 0 → 1 → 2 → ... → 254 → 255 → 0 → ...
@@ -14,31 +16,32 @@ AUTOSAR Adaptive Platform 開発で得た知見を活かし、**YAML設定ファ
 
 ---
 
-## Features
+## 主な機能
 
-- YAMLベースの通信設定
+- YAMLによる通信設定
 - ARXML自動生成
-- Sender / Receiver C++コード自動生成
-- Jinja2テンプレートによるコード生成
+- Senderアプリ自動生成
+- Receiverアプリ自動生成
+- Jinja2によるコード生成
 - CMakeプロジェクト自動生成
 - UDP通信による疎通確認
-- 1Byteカウンタの周期送信
+- 1Byteカウンタの連続送信
 - AUTOSARライクな開発フローの再現
 
 ---
 
-## System Overview
+## システム全体構成
 
 ```mermaid
 flowchart TD
 
     A["app.yaml"]
     B["generate.py"]
-    C["Jinja2 Templates"]
+    C["Jinja2テンプレート"]
 
     D["Communication.arxml"]
-    E["Sender Application"]
-    F["Receiver Application"]
+    E["Senderアプリ"]
+    F["Receiverアプリ"]
     G["CMakeLists.txt"]
 
     A --> B
@@ -52,28 +55,28 @@ flowchart TD
 
 ---
 
-## Generation Flow
+## コード生成フロー
 
 ```mermaid
 flowchart TD
 
-    A["Configuration File<br/>app.yaml"]
+    A["設定ファイル<br>app.yaml"]
 
-    B["Python Generator<br/>generate.py"]
+    B["コード生成ツール<br>generate.py"]
 
-    C["Jinja2 Templates"]
+    C["Jinja2テンプレート"]
 
     D["Communication.arxml"]
 
-    E["Sender Application"]
+    E["Senderアプリ"]
 
-    F["Receiver Application"]
+    F["Receiverアプリ"]
 
-    G["CMake Build System"]
+    G["CMakeビルド設定"]
 
-    H["Build"]
+    H["ビルド"]
 
-    I["UDP Communication Test"]
+    I["UDP通信確認"]
 
     A --> B
 
@@ -93,44 +96,44 @@ flowchart TD
 
 ---
 
-## Communication Flow
+## 通信構成
 
 ```mermaid
 flowchart LR
 
-    S["Sender App"]
+    S["Senderアプリ"]
 
-    R["Receiver App"]
+    R["Receiverアプリ"]
 
-    S -->|UDP Packet| R
+    S -->|UDP通信| R
 ```
 
 ---
 
-## Sender Behavior
+## Sender動作
 
 ```mermaid
 flowchart TD
 
-    A["Initialize Counter = 0"]
+    A["カウンタ初期化<br>0"]
 
-    B["Send Counter"]
+    B["カウンタ送信"]
 
-    C["Counter < 255 ?"]
+    C["255到達?"]
 
-    D["Counter++"]
+    D["カウンタ加算"]
 
-    E["Counter = 0"]
+    E["0へ戻す"]
 
-    F["Wait Cycle Time"]
+    F["周期待ち"]
 
     A --> B
 
     B --> C
 
-    C -->|Yes| D
+    C -->|No| D
 
-    C -->|No| E
+    C -->|Yes| E
 
     D --> F
 
@@ -141,7 +144,7 @@ flowchart TD
 
 ---
 
-## Project Structure
+## ディレクトリ構成
 
 ```text
 autosar-communication-generator
@@ -180,7 +183,7 @@ autosar-communication-generator
 
 ---
 
-## Example Configuration
+## 設定ファイル例
 
 ```yaml
 application:
@@ -211,15 +214,15 @@ signal:
 
 ---
 
-## Build
+## ビルド方法
 
-### Generate Source Code
+### コード生成
 
 ```bash
 python generator/generate.py
 ```
 
-### Build Generated Applications
+### ビルド
 
 ```bash
 cd generated
@@ -233,15 +236,15 @@ make
 
 ---
 
-## Run
+## 実行方法
 
-### Terminal 1
+### ターミナル1
 
 ```bash
 ./receiver
 ```
 
-### Terminal 2
+### ターミナル2
 
 ```bash
 ./sender
@@ -249,7 +252,7 @@ make
 
 ---
 
-## Expected Output
+## 実行結果例
 
 ### Sender
 
@@ -257,7 +260,6 @@ make
 [TX] 0
 [TX] 1
 [TX] 2
-[TX] 3
 ...
 [TX] 254
 [TX] 255
@@ -270,7 +272,6 @@ make
 [RX] 0
 [RX] 1
 [RX] 2
-[RX] 3
 ...
 [RX] 254
 [RX] 255
@@ -279,30 +280,29 @@ make
 
 ---
 
-## Motivation
+## 作成目的
 
-This project was created to reproduce a simplified AUTOSAR-style development workflow.
+業務で携わっているAUTOSAR Adaptive Platform開発の経験をもとに、設定ファイルから各種成果物を自動生成する開発フローを個人プロジェクトとして再現することを目的に作成しました。
 
-### Objectives
+特に以下の技術要素を学習・整理することを意識しています。
 
-- Configuration-driven development
-- ARXML generation
-- Communication application generation
-- Automated code generation
-- Build system generation
-- Communication verification automation
-
-The goal is to demonstrate AUTOSAR-related software architecture concepts without using proprietary automotive development assets.
+- AUTOSAR
+- ARXML
+- Python
+- Jinja2
+- コード生成
+- UDP通信
+- CMake
 
 ---
 
-## Future Enhancements
+## 今後の拡張案
 
-- TCP support
-- Multiple signal generation
-- Sender/Receiver Interface generation
-- AUTOSAR Port generation
-- Runnable generation
-- GoogleTest auto-generation
-- GitHub Actions CI/CD
-- Adaptive AUTOSAR Service Interface generation
+- TCP通信への対応
+- 複数Signal対応
+- Sender/Receiver Interface生成
+- AUTOSAR Port生成
+- Runnable生成
+- GoogleTest自動生成
+- GitHub ActionsによるCI/CD
+- AUTOSAR Adaptive Service Interface生成
