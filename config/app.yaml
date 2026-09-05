@@ -1,0 +1,54 @@
+application:
+  name: CommunicationDemo
+
+communication:
+  protocol: UDP
+
+sender:
+  app_name: Sender
+
+  ip_address: "192.168.10.100"
+
+  mac_address: "00:11:22:33:44:55"
+
+  port: 50000
+
+receiver:
+  app_name: Receiver
+
+  ip_address: "192.168.10.101"
+
+  mac_address: "AA:BB:CC:DD:EE:FF"
+
+  port: 50001
+
+signal:
+  name: CounterSignal
+
+  data_type: uint8
+
+  data_size_byte: 1
+
+  cycle_ms: 100
+
+  initial_value: 0
+
+arxml:
+  interface_name: CounterInterface
+
+  package_name: CommunicationPackage
+
+
+signals:
+
+  - name: CounterSignal
+    type: uint8
+    size: 1
+
+  - name: VehicleSpeed
+    type: uint16
+    size: 2
+
+  - name: SteeringAngle
+    type: float
+    size: 4
