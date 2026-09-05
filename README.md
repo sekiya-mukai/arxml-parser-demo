@@ -1,162 +1,233 @@
-# Autonomous Driving Demo
+# Autosar Communication Generator
 
-A lightweight autonomous driving simulation written in modern C++17.
+AUTOSAR Adaptive Platform 開発で得た知見を活かし、**YAML設定ファイルから ARXML と C++送受信アプリケーションを自動生成するコードジェネレータ**を開発しました。
 
-This project demonstrates the implementation of core autonomous driving concepts, including:
-
-- Adaptive Cruise Control (ACC)
-- Collision Risk Detection
-- Unit Testing with GoogleTest
-- Modular C++ Software Design
-- CMake-based Build System
+生成されたアプリケーションは UDP 通信による疎通確認を目的としており、送信側は 1Byte カウンタを周期送信します。
 
 ---
 
-## Overview
+## Counter Behavior
 
-The application simulates a simplified vehicle control pipeline.
-
-Sensor information is provided to both the Adaptive Cruise Control module and the Collision Detection module to determine the vehicle's target behavior.
-
----
-
-## Architecture
-
-```mermaid
-flowchart LR
-
-    SensorData["Sensor Data"]
-
-    ACC["Adaptive Cruise Control"]
-
-    Collision["Collision Detector"]
-
-    Decision["Vehicle Decision"]
-
-    SensorData --> ACC
-    SensorData --> Collision
-
-    ACC --> Decision
-    Collision --> Decision
-```
-
----
-
-## Component Diagram
-
-```mermaid
-classDiagram
-
-class SensorData
-{
-    +currentSpeed
-    +frontVehicleSpeed
-    +distanceToObstacle
-}
-
-class AdaptiveCruiseControl
-{
-    +calculateTargetSpeed()
-}
-
-class CollisionDetector
-{
-    +isCollisionRisk()
-}
-
-SensorData --> AdaptiveCruiseControl
-SensorData --> CollisionDetector
-```
-
----
-
-## Execution Flow
-
-```mermaid
-flowchart TD
-
-    A["Read Sensor Data"]
-
-    B["Collision Detection"]
-
-    C["Adaptive Cruise Control"]
-
-    D["Generate Vehicle Command"]
-
-    A --> B
-    A --> C
-
-    B --> D
-    C --> D
+```text
+0 → 1 → 2 → ... → 254 → 255 → 0 → ...
 ```
 
 ---
 
 ## Features
 
-### Adaptive Cruise Control
+- YAMLベースの通信設定
+- ARXML自動生成
+- Sender / Receiver C++コード自動生成
+- Jinja2テンプレートによるコード生成
+- CMakeプロジェクト自動生成
+- UDP通信による疎通確認
+- 1Byteカウンタの周期送信
+- AUTOSARライクな開発フローの再現
 
-Calculates a safe target speed based on:
+---
 
-- Current vehicle speed
-- Front vehicle speed
-- Following distance
+## System Overview
 
-### Collision Detection
+```mermaid
+flowchart TD
 
-Evaluates collision risk using:
+    A["app.yaml"]
+    B["generate.py"]
+    C["Jinja2 Templates"]
 
-- Relative speed
-- Distance to obstacle
-- Time-to-Collision (TTC) concept
+    D["Communication.arxml"]
+    E["Sender Application"]
+    F["Receiver Application"]
+    G["CMakeLists.txt"]
 
-### Unit Testing
+    A --> B
+    B --> C
 
-The collision detection logic is validated using GoogleTest.
+    C --> D
+    C --> E
+    C --> F
+    C --> G
+```
 
-Covered scenarios include:
+---
 
-- Collision Risk
-- No Collision Risk
-- Front Vehicle Faster
+## Generation Flow
+
+```mermaid
+flowchart TD
+
+    A["Configuration File<br/>app.yaml"]
+
+    B["Python Generator<br/>generate.py"]
+
+    C["Jinja2 Templates"]
+
+    D["Communication.arxml"]
+
+    E["Sender Application"]
+
+    F["Receiver Application"]
+
+    G["CMake Build System"]
+
+    H["Build"]
+
+    I["UDP Communication Test"]
+
+    A --> B
+
+    B --> C
+
+    C --> D
+    C --> E
+    C --> F
+    C --> G
+
+    E --> H
+    F --> H
+    G --> H
+
+    H --> I
+```
+
+---
+
+## Communication Flow
+
+```mermaid
+flowchart LR
+
+    S["Sender App"]
+
+    R["Receiver App"]
+
+    S -->|UDP Packet| R
+```
+
+---
+
+## Sender Behavior
+
+```mermaid
+flowchart TD
+
+    A["Initialize Counter = 0"]
+
+    B["Send Counter"]
+
+    C["Counter < 255 ?"]
+
+    D["Counter++"]
+
+    E["Counter = 0"]
+
+    F["Wait Cycle Time"]
+
+    A --> B
+
+    B --> C
+
+    C -->|Yes| D
+
+    C -->|No| E
+
+    D --> F
+
+    E --> F
+
+    F --> B
+```
 
 ---
 
 ## Project Structure
 
 ```text
-autonomous-driving-demo
-├── CMakeLists.txt
-├── README.md
+autosar-communication-generator
 │
-├── docs
-│   └── design.md
+├── config
+│   └── app.yaml
 │
-├── include
-│   ├── AdaptiveCruiseControl.hpp
-│   ├── CollisionDetector.hpp
-│   └── SensorData.hpp
+├── generator
+│   └── generate.py
 │
-├── src
-│   ├── AdaptiveCruiseControl.cpp
-│   ├── CollisionDetector.cpp
-│   └── main.cpp
+├── templates
+│   ├── CMakeLists.txt.j2
+│   ├── arxml
+│   │   └── Communication.arxml.j2
+│   ├── include
+│   │   ├── Sender.hpp.j2
+│   │   └── Receiver.hpp.j2
+│   └── src
+│       ├── Sender.cpp.j2
+│       ├── SenderMain.cpp.j2
+│       ├── Receiver.cpp.j2
+│       └── ReceiverMain.cpp.j2
 │
-└── tests
-    └── CollisionDetectorTest.cpp
+└── generated
+    ├── CMakeLists.txt
+    ├── CommunicationDemo.arxml
+    ├── include
+    │   ├── Sender.hpp
+    │   └── Receiver.hpp
+    └── src
+        ├── Sender.cpp
+        ├── SenderMain.cpp
+        ├── Receiver.cpp
+        └── ReceiverMain.cpp
+```
+
+---
+
+## Example Configuration
+
+```yaml
+application:
+  name: CommunicationDemo
+
+communication:
+  protocol: UDP
+
+sender:
+  app_name: Sender
+  ip_address: "192.168.10.100"
+  mac_address: "00:11:22:33:44:55"
+  port: 50000
+
+receiver:
+  app_name: Receiver
+  ip_address: "192.168.10.101"
+  mac_address: "AA:BB:CC:DD:EE:FF"
+  port: 50001
+
+signal:
+  name: CounterSignal
+  data_type: uint8
+  data_size_byte: 1
+  cycle_ms: 100
+  initial_value: 0
 ```
 
 ---
 
 ## Build
 
-```bash
-mkdir build
+### Generate Source Code
 
+```bash
+python generator/generate.py
+```
+
+### Build Generated Applications
+
+```bash
+cd generated
+
+mkdir build
 cd build
 
 cmake ..
-
 make
 ```
 
@@ -164,65 +235,74 @@ make
 
 ## Run
 
+### Terminal 1
+
 ```bash
-./autonomous_demo
+./receiver
+```
+
+### Terminal 2
+
+```bash
+./sender
 ```
 
 ---
 
-## Example Output
+## Expected Output
+
+### Sender
 
 ```text
-Target Speed : 50 km/h
-Collision Risk : true
+[TX] 0
+[TX] 1
+[TX] 2
+[TX] 3
+...
+[TX] 254
+[TX] 255
+[TX] 0
 ```
 
----
-
-## Execute Tests
-
-```bash
-./collision_detector_test
-```
-
-or
-
-```bash
-ctest --verbose
-```
-
-Expected Output:
+### Receiver
 
 ```text
-[==========] Running 3 tests
-[  PASSED  ] 3 tests
+[RX] 0
+[RX] 1
+[RX] 2
+[RX] 3
+...
+[RX] 254
+[RX] 255
+[RX] 0
 ```
-
----
-
-## Technologies
-
-- C++17
-- CMake
-- GoogleTest
-- Object-Oriented Design
-- Unit Testing
-
----
-
-## Future Enhancements
-
-- Lane Keeping Assist (LKA)
-- Object Tracking
-- Path Planning
-- Sensor Fusion
-- Extended TTC-based Risk Assessment
-- Integration with AUTOSAR-style Interfaces
 
 ---
 
 ## Motivation
 
-This project was created to practice software design techniques commonly used in autonomous driving systems.
+This project was created to reproduce a simplified AUTOSAR-style development workflow.
 
-The goal is to build a clean and testable architecture while demonstrating the implementation of core driver assistance functions using modern C++.
+### Objectives
+
+- Configuration-driven development
+- ARXML generation
+- Communication application generation
+- Automated code generation
+- Build system generation
+- Communication verification automation
+
+The goal is to demonstrate AUTOSAR-related software architecture concepts without using proprietary automotive development assets.
+
+---
+
+## Future Enhancements
+
+- TCP support
+- Multiple signal generation
+- Sender/Receiver Interface generation
+- AUTOSAR Port generation
+- Runnable generation
+- GoogleTest auto-generation
+- GitHub Actions CI/CD
+- Adaptive AUTOSAR Service Interface generation
